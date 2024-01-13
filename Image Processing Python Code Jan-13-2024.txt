@@ -1,0 +1,200 @@
+import cv2 as cv
+import serial
+import time
+import os
+import sys 
+import numpy as np
+import math
+
+# Open a serial connection to the Arduino board
+ser = serial.Serial('COM5', 9600)
+
+# Create directories for saving snapshots
+file_path1 =r'C:\Users\Dell\Desktop\webcam_snapshots\camera1'
+file_path2 = r'C:\Users\Dell\Desktop\webcam_snapshots\camera2'
+file_path3 = r'C:\Users\Dell\Desktop\webcam_snapshots\camera3'
+
+
+if not os.path.exists(file_path1):
+    os.makedirs(file_path1)
+if not os.path.exists(file_path2):
+   os.makedirs(file_path2)
+if not os.path.exists(file_path3):
+   os.makedirs(file_path3)
+
+# Initialize the cameras
+camera1 = cv.VideoCapture(0)
+camera2 = cv.VideoCapture(1)
+camera3 = cv.VideoCapture(2)
+
+# Set HoughCircles parameters
+accum_size = 1    
+minDist = 30       
+param1 = 50
+param2 = 5
+minRadius = 1       
+maxRadius = 10
+
+# Define a function to count the number of circles in an image
+def count_circles(image):
+    circles = cv.HoughCircles(image, cv.HOUGH_GRADIENT, accum_size, minDist,
+                                       param1=param1, param2=param2,
+                                       minRadius=minRadius, maxRadius=maxRadius)
+    if circles is not None:
+        circles = np.uint16(np.around(circles))
+        return len(circles[0, :])
+    else:
+        return 0
+
+while True:
+    # Read data from the serial port
+    data = ser.readline().strip().decode('utf-8')
+    
+    # If the command is "Take snapshot", take a snapshot from each camera and draw circles on it
+    if data == "Take snapshot":
+        # Take a snapshot using camera 1, draw circles on it, and save it to a file in the specified directory
+        ret1, frame1 = camera1.read()
+        if ret1:
+            # Convert the snapshot to grayscale and apply a median blur
+            gray1 = cv.cvtColor(frame1, cv.COLOR_BGR2GRAY)
+            gray1 = cv.medianBlur(gray1, 3)
+
+            # Detect circles in the grayscale image
+            circles1 = cv.HoughCircles(gray1, cv.HOUGH_GRADIENT, accum_size, minDist,
+                                       param1=param1, param2=param2,
+                                       minRadius=minRadius, maxRadius=maxRadius)
+
+            # Count the number of circles in the image
+            number_of_circles1 = count_circles(gray1)
+            diameters = []
+            # Draw the detected circles on the original snapshot
+            if circles1 is not None:
+                circles1 = np.uint16(np.around(circles1))
+                for i in circles1[0, :]:
+                    center = (i[0], i[1])
+                    radius = i[2]
+                    diameter = 2 * radius
+
+                    diameters.append(diameter)
+                    largest_diameter = max(diameters)
+                    smallest_diameter = min(diameters)
+                    average_diameter = sum(diameters) / len(diameters)
+
+                    cv.circle(frame1, center, diameter, (255, 0, 255), 3)
+                    cv.putText(frame1, "{:.2f}".format(diameter), (center[0], center[1] + radius + 15),  
+                     cv.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 0), 2)
+                cv.putText(frame1, f"n = {number_of_circles1}", (center[0], center[1] - 20),
+                             cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+                
+                snapshot_name = time.strftime('A-%Y%m%d-%H%M%S')
+                ser.write(f"Snapshot: {snapshot_name}\n".encode())
+                ser.write(f"Largest diameter: {largest_diameter:.2f}\n".encode())
+                ser.write(f"Smallest diameter: {smallest_diameter:.2f}\n".encode())
+                ser.write(f"Average diameter: {average_diameter:.2f}\n".encode())
+                ser.write(f"Number of circles: {number_of_circles1: .2f}\n".encode())
+
+                print(f"Snapshot: {time.strftime('A-%Y%m%d-%H%M%S')}")
+                print(f"Number of circles (A): {number_of_circles1}")
+                print(f"Largest diameter (A): {largest_diameter:.2f}")
+                print(f"Smallest diameter (A): {smallest_diameter:.2f}")
+                print(f"Average diameter (A): {average_diameter:.2f}")
+
+            # Save the modified snapshot to a file
+            filename1 = os.path.join(file_path1, time.strftime("A-%Y%m%d-%H%M%S.jpg"))
+            cv.imwrite(filename1, frame1)
+            print("Snapshot saved to %s" % filename1)
+        else:
+            print("Error taking snapshot from camera 1")
+
+        ret2, frame2 = camera2.read()    
+        if ret2:
+            # Convert the snapshot to grayscale and apply a median blur
+            gray2 = cv.cvtColor(frame2, cv.COLOR_BGR2GRAY)
+            gray2 = cv.medianBlur(gray2, 3)
+
+            # Detect circles in the grayscale image
+            circles2 = cv.HoughCircles(gray2, cv.HOUGH_GRADIENT, accum_size, minDist,
+                                       param1=param1, param2=param2,
+                                       minRadius=minRadius, maxRadius=maxRadius)
+            
+      
+            number_of_circles2 = count_circles(gray2)
+
+
+            # Draw the detected circles on the original snapshot
+            if circles2 is not None:
+                circles2 = np.uint16(np.around(circles2))
+                for i in circles2[0, :]:
+                    center = (i[0], i[1])
+                    radius = i[2]
+                    diameter = 2 * radius
+
+                    diameters.append(diameter)
+                    largest_diameter = max(diameters)
+                    smallest_diameter = min(diameters)
+                    average_diameter = sum(diameters) / len(diameters)
+
+                    cv.circle(frame2, center, diameter, (255, 0, 255), 3)
+                    cv.putText(frame2, "{:.2f}".format(diameter), (center[0], center[1] + radius + 15),  
+                     cv.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 0), 2)
+                cv.putText(frame2, f"n = {number_of_circles2}", (center[0], center[1] - 20),
+                             cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+                print(f"Snapshot: {time.strftime('B-%Y%m%d-%H%M%S')}")
+                print(f"Number of circles (B): {number_of_circles2}")
+                print(f"Largest diameter (B): {largest_diameter:.2f}")
+                print(f"Smallest diameter (B): {smallest_diameter:.2f}")
+                print(f"Average diameter (B): {average_diameter:.2f}")
+
+            # Save the modified snapshot to a file
+            filename2 = os.path.join(file_path2, time.strftime("B-%Y%m%d-%H%M%S.jpg"))
+            cv.imwrite(filename2, frame2)
+            print("Snapshot saved to %s" % filename2)
+        else:
+            print("Error taking snapshot from camera 2")
+
+        # Take a snapshot using camera 3, draw circles on it, and save it to a file in the specified directory
+        ret3, frame3 = camera3.read()
+        if ret3:
+            # Convert the snapshot to grayscale and apply a median blur
+            gray3 = cv.cvtColor(frame3, cv.COLOR_BGR2GRAY)
+            gray3 = cv.medianBlur(gray3, 3)
+
+            # Detect circles in the grayscale image
+            circles3 = cv.HoughCircles(gray3, cv.HOUGH_GRADIENT, accum_size, minDist,
+                                       param1=param1, param2=param2,
+                                       minRadius=minRadius, maxRadius=maxRadius)
+            
+            number_of_circles3 = count_circles(gray3)
+
+            # Draw the detected circles on the original snapshot
+            if circles3 is not None:
+                circles3 = np.uint16(np.around(circles3))
+                for i in circles3[0, :]:
+                    center = (i[0], i[1])
+                    radius = i[2]
+                    diameter = 2 * radius
+                    cv.circle(frame3, center, diameter, (255, 0, 255), 3)
+                    cv.putText(frame3, "{:.2f}".format(diameter), (center[0], center[1] + radius + 15),  
+                     cv.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 0), 2)
+                cv.putText(frame3, f"n = {number_of_circles3}", (center[0], center[1] - 20),
+                             cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+                print(f"Snapshot: {time.strftime('C-%Y%m%d-%H%M%S')}")
+                print(f"Number of circles (C): {number_of_circles3}")
+                print(f"Largest diameter (C): {largest_diameter:.2f}")
+                print(f"Smallest diameter (C): {smallest_diameter:.2f}")
+                print(f"Average diameter (C): {average_diameter:.2f}")
+            # Save the modified snapshot to a file
+            filename3 = os.path.join(file_path3, time.strftime("C-%Y%m%d-%H%M%S.jpg"))
+            cv.imwrite(filename3, frame3)
+            print("Snapshot saved to %s" % filename3)
+        else:
+            print("Error taking snapshot from camera 3")
+    
+    # Wait for 1 second before reading the serial port again
+    time.sleep(59)
+
+# Release the cameras and close the serial connection
+camera1.release()
+camera2.release()
+camera3.release()
+ser.close()

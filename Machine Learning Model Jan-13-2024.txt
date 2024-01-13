@@ -1,0 +1,60 @@
+import cv2 as cv
+import time
+import os
+import sys 
+import numpy as np
+from keras.models import load_model
+
+# Load the model
+model = load_model(r'C:\Users\Dell\Desktop\keras_model.h5', compile=False)
+
+# Load the labels
+class_names = open(r'C:\Users\Dell\Desktop\labels.txt', "r").readlines()
+
+# CAMERA can be 0 or 1 based on the default camera of your computer
+camera = cv.VideoCapture(0)
+
+# Create directories for saving snapshots
+file_path1 = os.path.expanduser(r'C:\Users\Dell\Desktop\webcam_snapshots\camera1')
+if not os.path.exists(file_path1):
+    os.makedirs(file_path1)
+
+while True:
+    # Take a snapshot using camera 1
+    ret1, frame1 = camera.read()
+    if ret1:
+        # Resize the image
+        frame1 = cv.resize(frame1, (224, 224), interpolation=cv.INTER_AREA)
+
+        # Make the image a numpy array and reshape it to the model's input shape
+        image = np.asarray(frame1, dtype=np.float32).reshape(1, 224, 224, 3)
+
+        # Normalize the image array
+        image = (image / 127.5) - 1
+
+        # Predict using the model
+        prediction = model.predict(image)
+        index = np.argmax(prediction)
+        class_name = class_names[index]
+        confidence_score = prediction[0][index]
+
+        # Print prediction and confidence score
+        print("Class:", class_name[2:], end="")
+        print("Confidence Score:", str(np.round(confidence_score * 100))[:-2], "%")
+
+        snapshot_name = time.strftime('A-%Y%m%d-%H%M%S')
+
+        print(f"Snapshot: {time.strftime('A-%Y%m%d-%H%M%S')}")
+
+        # Save the snapshot to a file
+        filename1 = os.path.join(file_path1, time.strftime("A-%Y%m%d-%H%M%S.jpg"))
+        cv.imwrite(filename1, frame1)
+        print("Snapshot saved to %s" % filename1)
+    else:
+        print("Error taking snapshot from camera 1")
+    
+    # Wait for 60 seconds before reading the webcam again
+    time.sleep(60)
+
+# Release the camera
+camera.release()

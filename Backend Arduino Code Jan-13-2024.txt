@@ -1,0 +1,483 @@
+#include <Wire.h>
+#include <CommandHandler.h>
+#include <MegunoLink.h>
+#include <SoftwareSerial.h>
+#include <Adafruit_MotorShield.h>
+Message MyCSVMessage("Data");
+CommandHandler<500> SerialCommandHandler;
+InterfacePanel MyPanel;
+SoftwareSerial mySerial2(18, 19);
+
+
+
+//Color Sensor1
+
+#define S0 51
+#define S1 45
+#define S2 47
+#define S3 49
+#define sensorOut 53
+
+//Color Sensor2
+
+#define S01 50
+#define S11 52
+#define S21 46
+#define S31 48
+#define sensorOut2 44
+
+//Color Sensor3
+
+#define S02 35
+#define S12 37
+#define S22 41
+#define S32 43
+#define sensorOut3 39
+
+
+float Stir1Speed;
+float BackCool1Speed;
+float FrontCool1Speed;
+float led1Intensity;
+float Stir2Speed;
+float BackCool2Speed;
+float FrontCool2Speed;
+float led2Intensity;
+float Stir3Speed;
+float BackCool3Speed;
+float FrontCool3Speed;
+float led3Intensity;
+float redFrequency = 0;
+int red = redFrequency;
+float greenFrequency = 0;
+int green = greenFrequency;
+float blueFrequency = 0;
+int blue = blueFrequency;
+String hexCode;
+unsigned long decimalValue;
+float redFrequency2 = 0;
+int red2 = redFrequency2;
+float greenFrequency2 = 0;
+int green2 = greenFrequency2;
+float blueFrequency2 = 0;
+int blue2 = blueFrequency2;
+String hexCode2;
+unsigned long decimalValue2;
+float redFrequency3 = 0;
+int red3 = redFrequency3;
+float greenFrequency3 = 0;
+int green3 = greenFrequency3;
+float blueFrequency3 = 0;
+int blue3 = blueFrequency3;
+String hexCode3;
+unsigned long decimalValue3;
+unsigned long currentMillis;
+unsigned long previousMillis = 0;
+unsigned long previousMillis1 = 0;
+
+
+Adafruit_MotorShield AFMS = Adafruit_MotorShield(0x60);
+Adafruit_MotorShield AFMS2 = Adafruit_MotorShield(0x71);
+Adafruit_MotorShield AFMS3 = Adafruit_MotorShield(0x73);
+Adafruit_DCMotor *stir1 = AFMS.getMotor(1);
+Adafruit_DCMotor *backcool1 = AFMS.getMotor(2);
+Adafruit_DCMotor *frontcool1 = AFMS.getMotor(3);
+Adafruit_DCMotor *led1 = AFMS.getMotor(4);
+Adafruit_DCMotor *stir2 = AFMS2.getMotor(1);
+Adafruit_DCMotor *backcool2 = AFMS2.getMotor(2);
+Adafruit_DCMotor *frontcool2 = AFMS2.getMotor(3);
+Adafruit_DCMotor *led2 = AFMS2.getMotor(4);
+Adafruit_DCMotor *stir3 = AFMS3.getMotor(1);
+Adafruit_DCMotor *backcool3 = AFMS3.getMotor(2);
+Adafruit_DCMotor *frontcool3 = AFMS3.getMotor(3);
+Adafruit_DCMotor *led3 = AFMS3.getMotor(4);
+
+
+//voids
+
+    void Cmd_SetStirring1Speed(CommandParameter &P)
+    {
+     Stir1Speed = P.NextParameterAsDouble();
+     stir1->setSpeed(Stir1Speed);
+    }
+
+    void Cmd_SetBackCooling1Speed(CommandParameter &P)
+    {
+     BackCool1Speed = P.NextParameterAsDouble();
+     backcool1->setSpeed(BackCool1Speed);
+    }
+    
+    void Cmd_SetFrontCooling1Speed(CommandParameter &P)
+    {
+     FrontCool1Speed = P.NextParameterAsDouble();
+     frontcool1->setSpeed(FrontCool1Speed);
+    }
+    
+    void Cmd_SetLED1Intensity(CommandParameter &P)
+    {
+     led1Intensity = P.NextParameterAsDouble();
+     led1->setSpeed(led1Intensity);
+    }
+   
+    void Cmd_SetStirring2Speed(CommandParameter &P)
+    {
+     Stir2Speed = P.NextParameterAsDouble();
+     stir2->setSpeed(Stir2Speed);
+    }
+
+    void Cmd_SetBackCooling2Speed(CommandParameter &P)
+    {
+     BackCool2Speed = P.NextParameterAsDouble();
+     backcool2->setSpeed(BackCool2Speed);
+    }
+    
+    void Cmd_SetFrontCooling2Speed(CommandParameter &P)
+    {
+     FrontCool2Speed = P.NextParameterAsDouble();
+     frontcool2->setSpeed(FrontCool2Speed);
+    }
+    
+    void Cmd_SetLED2Intensity(CommandParameter &P)
+    {
+     led2Intensity = P.NextParameterAsDouble();
+     led2->setSpeed(led2Intensity);
+    }  
+
+    void Cmd_SetStirring3Speed(CommandParameter &P)
+    {
+     Stir3Speed = P.NextParameterAsDouble();
+     stir3->setSpeed(Stir3Speed);
+    }
+
+    void Cmd_SetBackCooling3Speed(CommandParameter &P)
+    {
+     BackCool3Speed = P.NextParameterAsDouble();
+     backcool3->setSpeed(BackCool3Speed);
+    }
+    
+    void Cmd_SetFrontCooling3Speed(CommandParameter &P)
+    {
+     FrontCool3Speed = P.NextParameterAsDouble();
+     frontcool3->setSpeed(FrontCool3Speed);
+    }
+    
+    void Cmd_SetLED3Intensity(CommandParameter &P)
+    {
+     led3Intensity = P.NextParameterAsDouble();
+     led3->setSpeed(led3Intensity);
+    }  
+  
+
+    
+void setup() {
+  
+  Serial.begin(9600);   
+  mySerial2.begin(9600);
+  AFMS.begin ();
+  AFMS2.begin ();
+  AFMS3.begin ();
+  Wire.begin();
+  
+
+  pinMode(S0, OUTPUT);
+  pinMode(S1, OUTPUT);
+  pinMode(S2, OUTPUT);
+  pinMode(S3, OUTPUT);
+  pinMode(sensorOut, INPUT);
+  digitalWrite(S0,HIGH); //Setting frequency scaling to 20%
+  digitalWrite(S1,LOW); //Setting frequency scaling to 20%
+
+  pinMode(S01, OUTPUT);
+  pinMode(S11, OUTPUT);
+  pinMode(S21, OUTPUT);
+  pinMode(S31, OUTPUT);
+  pinMode(sensorOut2, INPUT);
+  digitalWrite(S01,HIGH); //Setting frequency scaling to 20%
+  digitalWrite(S11,LOW); //Setting frequency scaling to 20%
+
+  pinMode(S02, OUTPUT);
+  pinMode(S12, OUTPUT);
+  pinMode(S22, OUTPUT);
+  pinMode(S32, OUTPUT);
+  pinMode(sensorOut3, INPUT);
+  digitalWrite(S02,HIGH); //Setting frequency scaling to 20%
+  digitalWrite(S12,LOW); //Setting frequency scaling to 20%
+  
+
+  stir1->setSpeed(0);
+  stir1->run(FORWARD);
+  stir1->run(RELEASE);
+  backcool1 ->setSpeed(0);
+  backcool1 ->run(FORWARD);
+  backcool1->run(RELEASE);
+  frontcool1->setSpeed(0);
+  frontcool1->run(FORWARD);
+  frontcool1->run(RELEASE);
+  led1->setSpeed(0);
+  led1->run(FORWARD);
+  led1->run(RELEASE);
+  stir2->setSpeed(0);
+  stir2->run(FORWARD);
+  stir2->run(RELEASE);
+  backcool2->setSpeed(0);
+  backcool2->run(FORWARD);
+  backcool2->run(RELEASE);
+  frontcool2->setSpeed(0);
+  frontcool2->run(FORWARD);
+  frontcool2->run(RELEASE);
+  led2->setSpeed(0);
+  led2->run(FORWARD);
+  led2->run(RELEASE);
+  stir3->setSpeed(0);
+  stir3->run(FORWARD);
+  stir3->run(RELEASE);
+  backcool3->setSpeed(0);
+  backcool3->run(FORWARD);
+  backcool3->run(RELEASE);
+  frontcool3->setSpeed(0);
+  frontcool3->run(FORWARD);
+  frontcool3->run(RELEASE);
+  led3->setSpeed(0);
+  led3->run(FORWARD);
+  led3->run(RELEASE);
+
+
+SerialCommandHandler.AddCommand(F("Stirring1"), Cmd_SetStirring1Speed);
+SerialCommandHandler.AddCommand(F("FrontCooling1"), Cmd_SetFrontCooling1Speed);
+SerialCommandHandler.AddCommand(F("BackCooling1"), Cmd_SetBackCooling1Speed);
+SerialCommandHandler.AddCommand(F("LED1"), Cmd_SetLED1Intensity);
+SerialCommandHandler.AddCommand(F("Stirring2"), Cmd_SetStirring2Speed);
+SerialCommandHandler.AddCommand(F("FrontCooling2"), Cmd_SetFrontCooling2Speed);
+SerialCommandHandler.AddCommand(F("BackCooling2"), Cmd_SetBackCooling2Speed);
+SerialCommandHandler.AddCommand(F("LED2"), Cmd_SetLED2Intensity);
+SerialCommandHandler.AddCommand(F("Stirring3"), Cmd_SetStirring3Speed);
+SerialCommandHandler.AddCommand(F("FrontCooling3"), Cmd_SetFrontCooling3Speed);
+SerialCommandHandler.AddCommand(F("BackCooling3"), Cmd_SetBackCooling3Speed);
+SerialCommandHandler.AddCommand(F("LED3"), Cmd_SetLED3Intensity);
+
+}
+
+void Setnumbers (){
+   MyPanel.SetNumber(F("Red1"),redFrequency);
+   MyPanel.SetNumber(F("Green1"),greenFrequency);
+   MyPanel.SetNumber(F("Blue1"),blueFrequency);
+   MyPanel.SetText(F("HexCode1"),hexCode);
+   MyPanel.SetNumber(F("decimalValue1"),decimalValue);
+   MyPanel.SetNumber(F("Red2"),redFrequency2);
+   MyPanel.SetNumber(F("Green2"),greenFrequency2);
+   MyPanel.SetNumber(F("Blue2"),blueFrequency2);
+   MyPanel.SetText(F("HexCode2"),hexCode2);
+   MyPanel.SetNumber(F("decimalValue2"),decimalValue2);
+   MyPanel.SetNumber(F("Red3"),redFrequency3);
+   MyPanel.SetNumber(F("Green3"),greenFrequency3);
+   MyPanel.SetNumber(F("Blue3"),blueFrequency3);
+   MyPanel.SetText(F("HexCode3"),hexCode3);
+   MyPanel.SetNumber(F("decimalValue3"),decimalValue3);  
+
+   TimePlot ccChart1;
+     ccChart1.SendData("Red1",redFrequency);
+     ccChart1.SendData("Green1",greenFrequency);
+     ccChart1.SendData("Blue1",blueFrequency);
+     ccChart1.SendData("Red2",redFrequency2);
+     ccChart1.SendData("Green2",greenFrequency2);
+     ccChart1.SendData("Blue2",blueFrequency2); 
+     ccChart1.SendData("Red3",redFrequency3);
+     ccChart1.SendData("Green3",greenFrequency3);
+     ccChart1.SendData("Blue3",blueFrequency3);
+}
+
+void loop() {
+
+currentMillis = millis ();
+  
+SerialCommandHandler.Process();  
+
+  stir1 ->setSpeed(Stir1Speed);
+  stir1 ->run(FORWARD);
+  
+  backcool1->setSpeed(BackCool1Speed);
+  backcool1->run(FORWARD);
+  
+  frontcool1->setSpeed(FrontCool1Speed);
+  frontcool1->run(FORWARD);
+
+  led1->setSpeed(led1Intensity);
+  led1->run(BACKWARD);
+  
+  stir2->setSpeed(Stir2Speed);
+  stir2->run(BACKWARD);
+  
+  backcool2->setSpeed(BackCool2Speed);
+  backcool2->run(FORWARD);
+    
+  frontcool2 ->setSpeed(FrontCool2Speed);
+  frontcool2 ->run(FORWARD);
+  
+  led2->setSpeed(led2Intensity);
+  led2->run(FORWARD);
+  
+  stir3->setSpeed(Stir3Speed);
+  stir3->run(FORWARD);
+ 
+  backcool3->setSpeed(BackCool3Speed); 
+  backcool3->run(FORWARD);
+ 
+  frontcool3->setSpeed(FrontCool3Speed);
+  frontcool3->run(BACKWARD);
+  
+  led3->setSpeed(led3Intensity);
+  led3->run(FORWARD);
+
+
+
+//Color Sensor
+  
+if ((currentMillis - previousMillis) >= 5000) {
+    
+    digitalWrite(S2,LOW);
+    digitalWrite(S3,LOW);
+    redFrequency = pulseIn(sensorOut, LOW);
+    Serial.print("R = ");
+    Serial.println(redFrequency);  
+
+    digitalWrite(S21,LOW);
+    digitalWrite(S31,LOW);
+    redFrequency2 = pulseIn(sensorOut2, LOW);
+    Serial.print("R = ");
+    Serial.println(redFrequency2);  
+
+    digitalWrite(S22,LOW);
+    digitalWrite(S32,LOW);
+    redFrequency3 = pulseIn(sensorOut3, LOW);
+    Serial.print("R = ");
+    Serial.println(redFrequency3);  
+    
+  
+    digitalWrite(S2,HIGH);
+    digitalWrite(S3,HIGH);
+    greenFrequency = pulseIn(sensorOut, LOW);
+    Serial.print(" G = ");
+    Serial.println(greenFrequency); 
+
+    digitalWrite(S21,HIGH);
+    digitalWrite(S31,HIGH);
+    greenFrequency2 = pulseIn(sensorOut2, LOW);
+    Serial.print(" G = ");
+    Serial.println(greenFrequency2);
+
+    digitalWrite(S22,HIGH);
+    digitalWrite(S32,HIGH);
+    greenFrequency3 = pulseIn(sensorOut3, LOW);
+    Serial.print(" G = ");
+    Serial.println(greenFrequency3);    
+    
+    digitalWrite(S2,LOW);
+    digitalWrite(S3,HIGH);
+    blueFrequency = pulseIn(sensorOut, LOW);
+    Serial.print(" B = ");
+    Serial.println(blueFrequency);
+
+    digitalWrite(S21,LOW);
+    digitalWrite(S31,HIGH);
+    blueFrequency2 = pulseIn(sensorOut2, LOW);
+    Serial.print(" B = ");
+    Serial.println(blueFrequency2);
+
+    digitalWrite(S22,LOW);
+    digitalWrite(S32,HIGH);
+    blueFrequency3 = pulseIn(sensorOut3, LOW);
+    Serial.print(" B = ");
+    Serial.println(blueFrequency3);
+   
+long rgb = 0;
+rgb = ((long)redFrequency << 16) | ((long)greenFrequency << 8 ) | (long)blueFrequency;
+
+long rgb2 = 0;
+rgb2 = ((long)redFrequency2 << 16) | ((long)greenFrequency2 << 8 ) | (long)blueFrequency2;
+
+long rgb3 = 0;
+rgb3 = ((long)redFrequency3 << 16) | ((long)greenFrequency3 << 8 ) | (long)blueFrequency3;
+
+
+hexCode = String(rgb, HEX);
+hexCode2 = String(rgb2, HEX);
+hexCode3 = String(rgb3, HEX);
+ 
+decimalValue = (int) strtol( &hexCode[0], NULL, 16);
+decimalValue2 = (int) strtol( &hexCode2[0], NULL, 16);
+decimalValue3 = (int) strtol( &hexCode3[0], NULL, 16);
+
+
+Setnumbers();
+MyCSVMessage.Begin();
+  Serial.print("HexCode");
+  Serial.print(",");
+  Serial.print(hexCode);
+  Serial.print(",");
+  Serial.print("decimalValue");
+  Serial.print(",");
+  Serial.print(decimalValue);
+  Serial.print(",");
+  Serial.print("Red1");
+  Serial.print(",");
+  Serial.print(redFrequency);
+  Serial.print(",");
+  Serial.print("Green1");
+  Serial.print(",");
+  Serial.print(greenFrequency);
+  Serial.print(",");
+  Serial.print("Blue1");
+  Serial.print(",");
+  Serial.print(blueFrequency);
+  Serial.print(",");
+  Serial.print("HexCode2");
+  Serial.print(",");
+  Serial.print(hexCode2);
+  Serial.print(",");
+  Serial.print("decimalValue2");
+  Serial.print(",");
+  Serial.print(decimalValue2);
+  Serial.print(",");
+  Serial.print("Red2");
+  Serial.print(",");
+  Serial.print(redFrequency2);
+  Serial.print(",");
+  Serial.print("Green2");
+  Serial.print(",");
+  Serial.print(greenFrequency2);
+  Serial.print(",");
+  Serial.print("Blue2");
+  Serial.print(",");
+  Serial.print(blueFrequency2);
+  Serial.print(",");
+  Serial.print("HexCode3");
+  Serial.print(",");
+  Serial.print(hexCode3);
+  Serial.print(",");
+  Serial.print("decimalValue3");
+  Serial.print(",");
+  Serial.print(decimalValue3);
+  Serial.print(",");
+  Serial.print("Red3");
+  Serial.print(",");
+  Serial.print(redFrequency3);
+  Serial.print(",");
+  Serial.print("Green3");
+  Serial.print(",");
+  Serial.print(greenFrequency3);
+  Serial.print(",");
+  Serial.print("Blue3");
+  Serial.print(",");
+  Serial.print(blueFrequency3);
+  Serial.print(",");
+  MyCSVMessage.End();
+
+previousMillis = currentMillis;
+}
+if ((currentMillis - previousMillis1) >= 60000) {
+
+   mySerial2.println("Take snapshot");
+   previousMillis1=currentMillis;
+
+}
+}
