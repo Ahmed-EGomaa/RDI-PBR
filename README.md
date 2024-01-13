@@ -1,7 +1,8 @@
-# RDI-PBR
+
+#  <p align="center"> RDI-PBR. </p>
+ <p align="center"> RDI PhotoBioreactor. </p>
 Microalgae photoBioreactor, DIY and AI based, Smart image recognition for cellular stress factors
 
-# RDI PhotoBioreactor
 
 Welcome to the RDI PhotoBioreactor project! This Do-It-Yourself (DIY) microalgae bioreactor is designed to facilitate the evolution of microalgae cells under harsh conditions. The reactor incorporates advanced features such as image recognition based on AI models, real-time monitoring of cellular stress, chemostatic control through cooling and stirring, as well as color sensing capabilities using a camera module. This cost-effective solution is specifically tailored for microbial adaptive evolution studies.
 
