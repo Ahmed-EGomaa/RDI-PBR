@@ -1,6 +1,7 @@
 
 #  <p align="center"> RDI-PBR. </p>
 <p align="center"> RDI PhotoBioreactor. </p>
+#  <p align="center"> RDI Prototyping LAb, Faculty of Biotechnology, MSA university. </p>
 <p align="center"> Microalgae photoBioreactor, DIY and AI based, Smart image recognition for cellular stress factors. </p>
 
 
@@ -56,7 +57,7 @@ We welcome contributions from the community to enhance the RDI PhotoBioreactor p
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE) - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the- see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
