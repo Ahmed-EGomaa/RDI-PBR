@@ -68,5 +68,5 @@ Happy experimenting with the RDI PhotoBioreactor!
 Ziyad Adbelal, 
 Doha Ibrahim,
 Adam Maged, and
-Mostafa Kamal 
+Mostafa Hesham 
 Supervised by: Ahmed Gomaa
