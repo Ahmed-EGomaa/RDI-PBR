@@ -1,0 +1,117 @@
+import cv2 as cv
+import time
+import os
+import sys
+import numpy as np
+from keras.models import load_model
+
+
+accum_size = 1    
+minDist = 30       
+param1 = 50
+param2 = 5
+minRadius = 1       
+maxRadius = 10
+
+# Define a function to count the number of circles in an image
+def count_circles(image):
+    circles = cv.HoughCircles(image, cv.HOUGH_GRADIENT, accum_size, minDist,
+                                       param1=param1, param2=param2,
+                                       minRadius=minRadius, maxRadius=maxRadius)
+    if circles is not None:
+        circles = np.uint16(np.around(circles))
+        return len(circles[0, :])
+    else:
+        return 0
+    
+    
+# Load the model
+model = load_model(r'C:\Users\Dell\Desktop\keras_model.h5', compile=False)
+
+# Load the labels
+class_names = open(r'C:\Users\Dell\Desktop\labels.txt', "r").readlines()
+
+# CAMERA can be 0 or 1 based on the default camera of your computer
+camera = cv.VideoCapture(0)
+
+# Create directories for saving snapshots
+file_path1 = os.path.expanduser(r'C:\Users\Dell\Desktop\webcam_snapshots\camera1')
+if not os.path.exists(file_path1):
+    os.makedirs(file_path1)
+
+while True:
+    # Take a snapshot using camera 1
+    ret1, frame1 = camera.read()
+    if ret1:
+        # Resize the image for prediction
+        resized_frame = cv.resize(frame1, (224, 224), interpolation=cv.INTER_AREA)
+
+        # Make the image a numpy array and reshape it to the model's input shape
+        image = np.asarray(resized_frame, dtype=np.float32).reshape(1, 224, 224, 3)
+
+        # Normalize the image array
+        image = (image / 127.5) - 1
+
+        # Predict using the model
+        prediction = model.predict(image)
+        index = np.argmax(prediction)
+        class_name = class_names[index]
+        confidence_score = prediction[0][index]
+
+        # Print prediction and confidence score
+        print("Class:", class_name[2:])
+        print("Confidence Score:", str(np.round(confidence_score * 100))[:-2], "%")
+
+        # Save the resized snapshot to a file
+        #resized_filename = os.path.join(file_path1, time.strftime("A-%Y%m%d-%H%M%S_resized.jpg"))
+        #cv.imwrite(resized_filename, resized_frame)
+        #print("Resized Snapshot saved to %s" % resized_filename)
+
+        # Apply image processing to the original-sized snapshot
+        gray = cv.cvtColor(frame1, cv.COLOR_BGR2GRAY)
+        gray = cv.medianBlur(gray, 3)
+        circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, accum_size, minDist,
+                                  param1=param1, param2=param2,
+                                  minRadius=minRadius, maxRadius=maxRadius)
+
+        # Count the number of circles in the image and draw them
+        number_of_circles = count_circles(gray)
+        diameters = []
+
+        if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for i in circles[0, :]:
+                center = (i[0], i[1])
+                radius = i[2]
+                diameter = 2 * radius
+
+                diameters.append(diameter)
+                largest_diameter = max(diameters)
+                smallest_diameter = min(diameters)
+                average_diameter = sum(diameters) / len(diameters)
+
+                cv.circle(frame1, center, diameter, (255, 0, 255), 3)
+                cv.putText(frame1, "{:.2f}".format(diameter), (center[0], center[1] + radius + 15),
+                           cv.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 0), 2)
+
+            cv.putText(frame1, f"n = {number_of_circles}", (center[0], center[1] - 20),
+                       cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+
+            print(f"Number of circles: {number_of_circles}")
+            print(f"Largest diameter: {largest_diameter:.2f}")
+            print(f"Smallest diameter: {smallest_diameter:.2f}")
+            print(f"Average diameter: {average_diameter:.2f}")
+
+        # Save the modified image to a file
+        original_filename = os.path.join(file_path1, time.strftime("A-%Y%m%d-%H%M%S_original.jpg"))
+        cv.imwrite(original_filename, frame1)
+        print("Original-sized Snapshot saved to %s" % original_filename)
+
+    else:
+        print("Error taking snapshot from camera 1")
+
+    # Wait for 60 seconds before reading the webcam again
+    time.sleep(60)
+
+# Release the camera
+camera.release()
