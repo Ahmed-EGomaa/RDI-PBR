@@ -65,7 +65,7 @@ We would like to express our gratitude to the open-source community for their in
 Happy experimenting with the RDI PhotoBioreactor!
 
 # CONTRIBUTORS 
-Ziyad Adbelal, 
+Ziyad Abdelaal, 
 Doha Ibrahim,
 Adam Maged, and
 Mostafa Hesham 
