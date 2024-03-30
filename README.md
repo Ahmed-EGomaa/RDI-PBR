@@ -1,8 +1,8 @@
 
 # **<p align="center"> RDI-PBR.</p>**
 ## <p align="center"> RDI PhotoBioreactor. </p>
-<p align="center"> Microalgae photoBioreactor, DIY and AI based, Smart image recognition for cellular stress factors. </p>
-<p align="center"> RDI Prototyping Lab, Faculty of Biotechnology, MSA university. </p>
+# <p align="center"> Microalgae photoBioreactor, DIY and AI based, Smart image recognition for cellular stress factors. </p>
+# <p align="center"> RDI Prototyping Lab, Faculty of Biotechnology, MSA university. </p>
 <p align="center"> Authors: Ziyad Adbelal, Doha Ibrahim, Adam Maged, Mostafa Hesham, and  Ahmed Gomaa. </p>
  
 <p align="center"> 
