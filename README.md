@@ -58,9 +58,9 @@ Follow these steps to set up your RDI PhotoBioreactor:
 
 We welcome contributions from the community to enhance the RDI PhotoBioreactor project. Feel free to submit bug reports, feature requests, or contribute to the codebase. Please follow the guidelines outlined in the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
-## License
-
-This project is licensed under the- see the [LICENSE](LICENSE) file for details.
+## Link to video: https://www.youtube.com/watch?v=OW5DElcqGos
+## Link to Pre-print: 
+## Link to designs: 
 
 ## Acknowledgments
 
